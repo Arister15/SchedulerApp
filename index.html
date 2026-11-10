@@ -6,6 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="ShiftPro" />
+  <meta name="theme-color" content="#0b0f19" />
   <title>Shift Scheduler Pro</title>
 
   <link rel="manifest" href="manifest.json" />
@@ -21,202 +22,452 @@
         extend: {
           colors: {
             brand: '#2563eb',
-            darkBg: '#0f172a',
-            darkCard: '#1e293b',
-            darkBorder: '#334155'
+            darkBg: '#0b0f19',
+            darkCard: '#151d2e',
+            darkBorder: '#243049'
           }
         }
       }
     }
   </script>
   <style>
-    body {
-      background-color: #0f172a;
+    html, body {
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #0b0f19;
       color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
+      -webkit-touch-callout: none;
     }
-    .safe-top { padding-top: env(safe-area-inset-top, 16px); }
-    .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 80px); }
-    input[type=range]::-webkit-slider-thumb {
-      height: 22px; width: 22px; border-radius: 50%; background: #2563eb; cursor: pointer; -webkit-appearance: none;
+    .safe-top-pad {
+      padding-top: max(env(safe-area-inset-top, 0px), 14px);
     }
+    .safe-bottom-scroll {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.5rem);
+    }
+    .safe-bottom-nav {
+      height: calc(3.8rem + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
   </style>
 </head>
-<body class="flex flex-col h-screen overflow-hidden text-slate-100">
+<body class="flex flex-col h-[100dvh] w-full select-none">
 
-  <!-- TOP APP BAR -->
-  <header class="safe-top bg-darkCard/80 backdrop-blur border-b border-darkBorder px-4 py-3 flex items-center justify-between shrink-0">
-    <div class="flex items-center space-x-2">
-      <div class="p-1.5 bg-blue-600 rounded-lg text-white">
+  <!-- ================= TOP APP BAR ================= -->
+  <header class="safe-top-pad shrink-0 bg-slate-900/95 backdrop-blur-md border-b border-slate-800/90 px-4 pb-3 flex items-center justify-between z-30">
+    <div class="flex items-center space-x-2.5">
+      <div class="p-2 bg-blue-600 rounded-xl text-white shadow-md shadow-blue-600/30">
         <i data-lucide="calendar-clock" class="w-5 h-5"></i>
       </div>
-      <h1 class="text-base font-bold tracking-tight">Shift Scheduler Pro</h1>
+      <div>
+        <h1 class="text-base font-bold tracking-tight text-white leading-tight">Shift Scheduler Pro</h1>
+        <p class="text-[10px] text-slate-400 font-medium">Smart Staff Management</p>
+      </div>
     </div>
-    <button onclick="openSettingsModal()" class="p-2 text-slate-400 hover:text-white rounded-lg active:bg-slate-800">
-      <i data-lucide="settings" class="w-5 h-5"></i>
+    <button onclick="openSettingsModal()" class="p-2.5 text-slate-400 hover:text-white rounded-xl bg-slate-800/60 border border-slate-700/60 active:scale-95 transition">
+      <i data-lucide="settings" class="w-4 h-4"></i>
     </button>
   </header>
 
-  <!-- MAIN SCROLLABLE CONTAINER -->
-  <main class="flex-1 overflow-y-auto px-4 py-3 safe-bottom space-y-4">
+  <!-- ================= MAIN SCROLLABLE VIEW ================= -->
+  <main class="flex-1 overflow-y-auto overscroll-contain px-3.5 py-3 safe-bottom-scroll space-y-4">
 
-    <!-- ================= VIEW 1: ΥΠΑΛΛΗΛΟΙ ================= -->
+    <!-- ================= TAB 1: ΚΑΡΤΕΛΑ ΥΠΑΛΛΗΛΟΥ ================= -->
     <section id="tab-staff" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Καρτέλα Υπαλλήλου</h2>
-        <button onclick="openStaffManageModal()" class="text-xs bg-slate-800 border border-slate-700 px-2.5 py-1.5 rounded-lg text-blue-400 flex items-center gap-1 active:scale-95 transition">
+      <div class="flex items-center justify-between px-1">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Στοιχεία & Διαθεσιμότητα</h2>
+        <button onclick="openStaffManageModal()" class="text-xs bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 px-3 py-1.5 rounded-xl text-blue-400 font-semibold flex items-center gap-1.5 active:scale-95 transition">
           <i data-lucide="users" class="w-3.5 h-3.5"></i> Προσωπικό
         </button>
       </div>
 
-      <!-- Employee Select -->
-      <div class="bg-darkCard border border-darkBorder rounded-xl p-3">
-        <label class="text-xs text-slate-400 font-medium">Επιλέξτε Υπάλληλο:</label>
-        <select id="emp-select" onchange="loadSelectedEmployeeUI()" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"></select>
+      <!-- Employee Selector Card -->
+      <div class="bg-darkCard border border-darkBorder rounded-2xl p-3.5 space-y-2 shadow-sm">
+        <label class="text-xs text-slate-400 font-semibold flex items-center gap-1">
+          <i data-lucide="user" class="w-3.5 h-3.5 text-blue-400"></i> Επιλογή Εργαζομένου:
+        </label>
+        <select id="emp-select" onchange="loadSelectedEmployeeUI()" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 px-3 text-sm font-bold text-white focus:ring-2 focus:ring-blue-500 outline-none"></select>
       </div>
 
-      <!-- Employee Settings Card -->
-      <div class="bg-darkCard border border-darkBorder rounded-xl p-4 space-y-3">
+      <!-- Quick Weekly Summary Row -->
+      <div class="bg-darkCard border border-darkBorder rounded-2xl p-3 space-y-2 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-400 flex items-center gap-1">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i> Επισκόπηση Εβδομάδας
+          </span>
+          <span id="quick-marine-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50"></span>
+        </div>
+        <div class="grid grid-cols-7 gap-1" id="quick-week-badges"></div>
+      </div>
+
+      <!-- Role & Target Shifts -->
+      <div class="bg-darkCard border border-darkBorder rounded-2xl p-4 space-y-3.5 shadow-sm">
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-xs text-slate-400">Πόστο</label>
-            <select id="emp-role" onchange="onRoleChange()" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm">
+            <label class="text-xs font-semibold text-slate-400">Πόστο Εργασίας</label>
+            <select id="emp-role" onchange="onRoleChange()" class="mt-1.5 w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs font-semibold text-white outline-none">
               <option value="Bar">Bar</option>
               <option value="Service">Service</option>
               <option value="Υποδοχή">Υποδοχή</option>
             </select>
           </div>
           <div>
-            <label class="text-xs text-slate-400">Ναυτολόγηση</label>
-            <div class="mt-2 flex items-center space-x-2">
-              <input type="checkbox" id="emp-marine" class="w-4 h-4 accent-blue-600 rounded">
-              <span class="text-sm font-medium">Ναυτολογημένος ⚓</span>
-            </div>
+            <label class="text-xs font-semibold text-slate-400">Ναυτολόγηση</label>
+            <label class="mt-1.5 flex items-center gap-2 p-2.5 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer">
+              <input type="checkbox" id="emp-marine" onchange="onMarineChange()" class="w-4 h-4 accent-blue-600 rounded">
+              <span class="text-xs font-semibold text-slate-200">Ναυτολογημένος ⚓</span>
+            </label>
           </div>
         </div>
 
         <div>
-          <div class="flex justify-between text-xs text-slate-400 mb-1">
-            <span>Στόχος Μεροκάματων</span>
-            <span id="target-shifts-val" class="font-bold text-blue-400">5</span>
+          <div class="flex justify-between text-xs font-semibold text-slate-400 mb-1.5">
+            <span>Επιθυμητά μεροκάματα εβδομάδας</span>
+            <span id="target-shifts-val" class="text-blue-400 font-bold text-sm">5 / 7</span>
           </div>
-          <input type="range" id="emp-shifts" min="1" max="7" value="5" oninput="document.getElementById('target-shifts-val').innerText = this.value" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none" />
+          <div class="flex items-center gap-3">
+            <input type="range" id="emp-shifts" min="1" max="7" value="5" oninput="updateShiftsDisplay(this.value)" class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+            <span class="text-xs font-mono text-slate-400 min-w-[28px] text-right" id="shifts-slider-hint">5</span>
+          </div>
         </div>
       </div>
 
-      <!-- Daily Availability List -->
-      <div class="space-y-2">
-        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ημερήσια Διαθεσιμότητα</h3>
+      <!-- Daily Availability Setup -->
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ρύθμιση ανά Ημέρα</h3>
+          <span class="text-[10px] text-slate-500">Επιλέξτε κατάσταση & ωράριο</span>
+        </div>
         <div id="daily-availability-container" class="space-y-2"></div>
       </div>
 
-      <!-- Actions -->
+      <!-- Save / Clear Actions -->
       <div class="pt-2 flex gap-2">
-        <button onclick="saveCurrentEmployee()" class="flex-1 bg-blue-600 active:bg-blue-700 font-semibold py-3 rounded-xl text-sm shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2">
-          <i data-lucide="check" class="w-4 h-4"></i> Αποθήκευση
+        <button onclick="saveCurrentEmployee()" class="flex-1 bg-blue-600 active:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition">
+          <i data-lucide="save" class="w-4 h-4"></i> Αποθήκευση Υπαλλήλου
         </button>
-        <button onclick="resetCurrentEmpAvail()" class="px-4 bg-slate-800 border border-slate-700 rounded-xl text-xs text-slate-300 active:bg-slate-700 flex items-center justify-center">
-          Μηδενισμός
+        <button onclick="resetCurrentEmpAvail()" class="px-4 bg-slate-800 border border-slate-700 hover:bg-slate-750 text-slate-300 font-semibold rounded-xl text-xs active:scale-[0.98] transition flex items-center justify-center gap-1.5">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Μηδενισμός
         </button>
       </div>
     </section>
 
-    <!-- ================= VIEW 2: ΖΩΝΕΣ & KPIS ================= -->
+    <!-- ================= TAB 2: ΡΥΘΜΙΣΕΙΣ MANAGER & ΖΩΝΕΣ ================= -->
     <section id="tab-zones" class="space-y-4 hidden">
-      <div class="flex items-center justify-between">
-        <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Ανάγκες & Ζώνες</h2>
-        <button onclick="openAddZoneModal()" class="text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 px-2.5 py-1.5 rounded-lg flex items-center gap-1 active:scale-95">
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Νέα Ζώνη
+      <div class="flex items-center justify-between px-1">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Επισκόπηση & Ζώνες</h2>
+        <button onclick="openAddZoneModal()" class="text-xs bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/40 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 active:scale-95 transition">
+          <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Νέα Ζώνη
         </button>
       </div>
 
-      <!-- KPI Summary Cards -->
+      <!-- Pre-check KPI Cards -->
       <div class="grid grid-cols-3 gap-2" id="kpi-cards"></div>
 
-      <!-- Zones List Cards -->
-      <div class="space-y-2.5" id="zones-list-container"></div>
+      <!-- Availability Dashboard By Role -->
+      <div class="bg-darkCard border border-darkBorder rounded-2xl p-3.5 space-y-3 shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-400"></i> Dashboard Διαθεσιμότητας
+          </span>
+          <div class="flex gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800" id="dash-role-tabs">
+            <button onclick="setDashRole('Bar')" id="dash-btn-Bar" class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white">Bar</button>
+            <button onclick="setDashRole('Service')" id="dash-btn-Service" class="px-2 py-0.5 rounded text-[10px] font-bold text-slate-400">Service</button>
+            <button onclick="setDashRole('Υποδοχή')" id="dash-btn-Υποδοχή" class="px-2 py-0.5 rounded text-[10px] font-bold text-slate-400">Υποδοχή</button>
+          </div>
+        </div>
+
+        <!-- Dashboard Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-[11px] text-left border-collapse" id="dash-matrix-table">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400">
+                <th class="py-1 px-1.5 font-semibold">Εργαζόμενος</th>
+                <th class="py-1 px-1 font-semibold text-center">Μεροκ.</th>
+                <th class="py-1 px-1 text-center">Δε</th>
+                <th class="py-1 px-1 text-center">Τρ</th>
+                <th class="py-1 px-1 text-center">Τε</th>
+                <th class="py-1 px-1 text-center">Πε</th>
+                <th class="py-1 px-1 text-center">Πα</th>
+                <th class="py-1 px-1 text-center">Σα</th>
+                <th class="py-1 px-1 text-center">Κυ</th>
+              </tr>
+            </thead>
+            <tbody id="dash-matrix-tbody" class="divide-y divide-slate-800/60 font-medium"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Zones Requirements -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ανάγκες Βαρδιών (Ζώνες)</h3>
+          <button onclick="saveAllZones()" class="text-[11px] bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 active:scale-95">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i> Αποθήκευση Ζωνών
+          </button>
+        </div>
+        <div class="space-y-2.5" id="zones-list-container"></div>
+      </div>
     </section>
 
-    <!-- ================= VIEW 3: ΠΡΟΓΡΑΜΜΑ ================= -->
+    <!-- ================= TAB 3: ΤΕΛΙΚΟ ΠΡΟΓΡΑΜΜΑ ================= -->
     <section id="tab-schedule" class="space-y-4 hidden">
-      <!-- Solver Action Card -->
-      <div class="bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/30 rounded-2xl p-4 text-center space-y-3">
+      <!-- Solver Action Hero -->
+      <div class="bg-gradient-to-br from-blue-950/60 via-slate-900 to-slate-900 border border-blue-500/30 rounded-2xl p-4 text-center space-y-3 shadow-lg">
         <div class="space-y-1">
-          <h3 class="text-base font-bold text-white">Αυτόματο Πρόγραμμα Βαρδιών</h3>
-          <p class="text-xs text-slate-400">Επίλυση με Google OR-Tools CP-SAT</p>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-400 text-[10px] font-bold">
+            <i data-lucide="cpu" class="w-3 h-3"></i> Google OR-Tools CP-SAT
+          </div>
+          <h3 class="text-base font-extrabold text-white">Αυτόματη Δημιουργία Προγράμματος</h3>
+          <p class="text-[11px] text-slate-400">Υπολογισμός με αυστηρούς περιορισμούς, ναυτολόγηση & 10ωρα</p>
         </div>
-        <button id="btn-solve" onclick="runSolver()" class="w-full bg-blue-600 active:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/40 flex items-center justify-center gap-2 transition active:scale-[0.98]">
-          <i data-lucide="sparkles" class="w-5 h-5"></i> Υπολογισμός Προγράμματος
+
+        <button id="btn-solve" onclick="runSolver()" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/40 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+          <i data-lucide="sparkles" class="w-4 h-4"></i> Υπολογισμός Προγράμματος
         </button>
-        <div id="solve-loader" class="hidden text-xs text-blue-300 flex items-center justify-center gap-2">
+
+        <div id="solve-loader" class="hidden py-2 text-xs text-blue-300 flex items-center justify-center gap-2">
           <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-400 border-t-transparent"></div>
-          Υπολογισμός βέλτιστου προγράμματος...
+          <span>Επίλυση βέλτιστου προγράμματος...</span>
         </div>
       </div>
 
-      <!-- Results Section -->
-      <div id="schedule-results" class="space-y-3 hidden">
-        <!-- Day Selector (Pills) -->
-        <div class="flex gap-1.5 overflow-x-auto pb-1" id="day-selector-pills"></div>
+      <!-- Schedule Results Container -->
+      <div id="schedule-results" class="space-y-3.5 hidden">
+        <!-- View Mode Switcher -->
+        <div class="bg-darkCard border border-darkBorder p-1 rounded-xl flex">
+          <button onclick="setScheduleViewMode('cards')" id="btn-view-cards" class="flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white flex items-center justify-center gap-1.5 shadow">
+            <i data-lucide="smartphone" class="w-3.5 h-3.5"></i> Ημερήσια (Cards)
+          </button>
+          <button onclick="setScheduleViewMode('table')" id="btn-view-table" class="flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 flex items-center justify-center gap-1.5">
+            <i data-lucide="table" class="w-3.5 h-3.5"></i> Πλήρης Πίνακας
+          </button>
+        </div>
 
-        <!-- Shift Cards for the Selected Day -->
-        <div class="space-y-3" id="day-shifts-content"></div>
+        <!-- VIEW A: DAY CARDS -->
+        <div id="view-mode-cards" class="space-y-3">
+          <!-- Day Pills -->
+          <div class="flex gap-1.5 overflow-x-auto pb-1" id="day-selector-pills"></div>
 
-        <!-- Excel Export -->
-        <button onclick="downloadExcel()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 mt-4">
-          <i data-lucide="file-spreadsheet" class="w-5 h-5"></i> Λήψη σε Excel (.xlsx)
+          <!-- Shifts for selected day -->
+          <div class="space-y-3" id="day-shifts-content"></div>
+
+          <!-- Off Staff Card -->
+          <div class="bg-darkCard border border-rose-500/20 rounded-2xl p-3.5 space-y-1.5 shadow-sm">
+            <h4 class="text-xs font-bold text-rose-400 flex items-center gap-1.5">
+              <i data-lucide="coffee" class="w-3.5 h-3.5"></i> Ρεπό Ημέρας
+            </h4>
+            <div id="day-off-staff" class="text-xs text-rose-200/90 font-medium"></div>
+          </div>
+        </div>
+
+        <!-- VIEW B: FULL TABLE -->
+        <div id="view-mode-table" class="bg-darkCard border border-darkBorder rounded-2xl p-3 space-y-2 hidden overflow-hidden shadow-sm">
+          <div class="text-[11px] text-slate-400 flex items-center gap-1 font-medium">
+            <i data-lucide="info" class="w-3.5 h-3.5 text-blue-400"></i> Σύρετε δεξιά/αριστερά για όλες τις ημέρες.
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left border-collapse" id="full-schedule-table">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/60">
+                  <th class="py-2 px-2 font-bold whitespace-nowrap sticky left-0 bg-slate-900 z-10">Εργαζόμενος</th>
+                  <th class="py-2 px-2 font-bold whitespace-nowrap">Πόστο</th>
+                  <th class="py-2 px-2 font-bold text-center whitespace-nowrap">Δευτέρα</th>
+                  <th class="py-2 px-2 font-bold text-center whitespace-nowrap">Τρίτη</th>
+                  <th class="py-2 px-2 font-bold text-center whitespace-nowrap">Τετάρτη</th>
+                  <th class="py-2 px-2 font-bold text-center whitespace-nowrap">Πέμπτη</th>
+                  <th class="py-2 px-2 font-bold text-center whitespace-nowrap">Παρασκευή</th>
+                  <th class="py-2 px-2 font-bold text-center whitespace-nowrap">Σάββατο</th>
+                  <th class="py-2 px-2 font-bold text-center whitespace-nowrap">Κυριακή</th>
+                </tr>
+              </thead>
+              <tbody id="full-schedule-tbody" class="divide-y divide-slate-800/80"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Marine & 40h Audit Card -->
+        <div class="bg-darkCard border border-darkBorder rounded-2xl p-3.5 space-y-2.5 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              <i data-lucide="anchor" class="w-4 h-4 text-blue-400"></i> Έλεγχος Ναυτολογημένων & 40ώρου
+            </span>
+          </div>
+          <div id="marine-audit-container" class="space-y-2"></div>
+        </div>
+
+        <!-- Excel Export Button -->
+        <button onclick="downloadExcel()" class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Λήψη σε Excel (.xlsx)
         </button>
       </div>
 
-      <div id="schedule-errors" class="hidden bg-rose-950/40 border border-rose-500/40 p-4 rounded-xl space-y-2">
-        <h4 class="text-sm font-bold text-rose-300 flex items-center gap-1.5">
-          <i data-lucide="alert-triangle" class="w-4 h-4"></i> Αδύνατη η Επίλυση
+      <!-- Schedule Failure Banner -->
+      <div id="schedule-errors" class="hidden bg-rose-950/40 border border-rose-500/40 p-4 rounded-2xl space-y-2.5">
+        <h4 class="text-xs font-extrabold text-rose-300 flex items-center gap-1.5 uppercase tracking-wide">
+          <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-400"></i> Αδύνατη η Εύρεση Λύσης
         </h4>
-        <div id="error-list" class="text-xs text-rose-200/90 space-y-1"></div>
+        <div id="error-list" class="text-xs text-rose-200/90 space-y-1.5 divide-y divide-rose-900/40"></div>
       </div>
     </section>
 
   </main>
 
-  <!-- BOTTOM NAVIGATION BAR -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-darkCard border-t border-darkBorder flex justify-around items-center h-16 px-2 z-40">
-    <button onclick="switchTab('staff')" id="nav-staff" class="flex flex-col items-center justify-center w-20 text-blue-500">
-      <i data-lucide="user-check" class="w-5 h-5 mb-0.5"></i>
-      <span class="text-[10px] font-semibold">Υπάλληλοι</span>
+  <!-- ================= FIXED BOTTOM NAVIGATION ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 flex justify-around items-center safe-bottom-nav px-2">
+    <button onclick="switchTab('staff')" id="nav-staff" class="flex flex-col items-center justify-center w-20 text-blue-500 transition">
+      <i data-lucide="user-check" class="w-5 h-5 mb-1"></i>
+      <span class="text-[11px] font-bold">Υπάλληλοι</span>
     </button>
-    <button onclick="switchTab('zones')" id="nav-zones" class="flex flex-col items-center justify-center w-20 text-slate-400">
-      <i data-lucide="sliders" class="w-5 h-5 mb-0.5"></i>
-      <span class="text-[10px] font-semibold">Ζώνες</span>
+    <button onclick="switchTab('zones')" id="nav-zones" class="flex flex-col items-center justify-center w-20 text-slate-400 transition">
+      <i data-lucide="sliders" class="w-5 h-5 mb-1"></i>
+      <span class="text-[11px] font-bold">Ζώνες</span>
     </button>
-    <button onclick="switchTab('schedule')" id="nav-schedule" class="flex flex-col items-center justify-center w-20 text-slate-400">
-      <i data-lucide="calendar" class="w-5 h-5 mb-0.5"></i>
-      <span class="text-[10px] font-semibold">Πρόγραμμα</span>
+    <button onclick="switchTab('schedule')" id="nav-schedule" class="flex flex-col items-center justify-center w-20 text-slate-400 transition">
+      <i data-lucide="calendar" class="w-5 h-5 mb-1"></i>
+      <span class="text-[11px] font-bold">Πρόγραμμα</span>
     </button>
   </nav>
 
-  <!-- SETTINGS MODAL (API URL) -->
-  <div id="modal-settings" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-darkCard border border-darkBorder rounded-2xl w-full max-w-sm p-4 space-y-4">
-      <h3 class="text-base font-bold">Ρυθμίσεις Σύνδεσης</h3>
-      <div>
-        <label class="text-xs text-slate-400">Python Solver API URL (Render):</label>
-        <input type="text" id="api-url-input" placeholder="https://shift-api.onrender.com" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none" />
-        <p class="text-[10px] text-slate-400 mt-1">Εισάγετε το URL που σας έδωσε το Render.</p>
+  <!-- ================= MODAL: ΔΙΑΧΕΙΡΙΣΗ ΠΡΟΣΩΠΙΚΟΥ ================= -->
+  <div id="modal-staff" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-darkCard border border-darkBorder rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 space-y-4 max-h-[90dvh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+          <i data-lucide="users" class="w-4 h-4 text-blue-400"></i> Διαχείριση Προσωπικού
+        </h3>
+        <button onclick="closeStaffManageModal()" class="p-1 rounded-lg text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
       </div>
-      <div class="flex gap-2">
-        <button onclick="saveApiUrl()" class="flex-1 bg-blue-600 py-2.5 rounded-xl font-semibold text-xs">Αποθήκευση</button>
-        <button onclick="closeSettingsModal()" class="px-4 bg-slate-800 rounded-xl text-xs">Κλείσιμο</button>
+
+      <!-- Add New Staff Form -->
+      <div class="space-y-3 bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+        <span class="text-xs font-bold text-blue-400">➕ Προσθήκη Νέου Εργαζομένου</span>
+        <input type="text" id="new-emp-name" placeholder="Ονοματεπώνυμο" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500" />
+        <div class="grid grid-cols-2 gap-2">
+          <select id="new-emp-role" onchange="onNewEmpRoleChange()" class="bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs text-white">
+            <option value="Bar">Bar</option>
+            <option value="Service">Service</option>
+            <option value="Υποδοχή">Υποδοχή</option>
+          </select>
+          <label class="flex items-center gap-1.5 text-xs bg-slate-900 border border-slate-700 rounded-xl px-2.5">
+            <input type="checkbox" id="new-emp-marine" class="accent-blue-600 rounded">
+            <span>Ναυτολογημένος ⚓</span>
+          </label>
+        </div>
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span>Μεροκάματα:</span>
+          <select id="new-emp-shifts" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5" selected>5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+          </select>
+        </div>
+        <button onclick="addNewEmployee()" class="w-full bg-blue-600 active:bg-blue-700 py-2.5 rounded-xl text-xs font-bold text-white shadow-md shadow-blue-600/30">
+          Προσθήκη
+        </button>
+      </div>
+
+      <!-- Delete Staff Section -->
+      <div class="space-y-2 bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+        <span class="text-xs font-bold text-rose-400">🗑️ Διαγραφή Εργαζομένου</span>
+        <select id="del-emp-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"></select>
+        <button onclick="deleteSelectedEmployee()" class="w-full bg-rose-600/20 text-rose-300 border border-rose-500/40 active:bg-rose-600 active:text-white py-2 rounded-xl text-xs font-bold transition">
+          Οριστική Διαγραφή
+        </button>
+      </div>
+
+      <!-- Reset to Defaults -->
+      <button onclick="resetAllEmployeesToDefault()" class="w-full bg-slate-800 hover:bg-slate-750 text-slate-300 border border-slate-700 py-2.5 rounded-xl text-xs font-bold active:scale-[0.98] transition">
+        🔄 Επαναφορά Προεπιλεγμένων (Reset)
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ΠΡΟΣΘΗΚΗ ΖΩΝΗΣ ================= -->
+  <div id="modal-zone" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-darkCard border border-darkBorder rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-blue-400"></i> Προσθήκη Νέας Ζώνης
+        </h3>
+        <button onclick="closeAddZoneModal()" class="p-1 rounded-lg text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs text-slate-400">Πόστο</label>
+          <select id="new-zone-role" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+            <option value="Bar">Bar</option>
+            <option value="Service">Service</option>
+            <option value="Υποδοχή">Υποδοχή</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400">Ωράριο (π.χ. 18:00 - 01:00)</label>
+          <input type="text" id="new-zone-slot" value="18:00 - 01:00" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white" />
+        </div>
+        <div>
+          <label class="text-xs text-slate-400">Απαίτηση Ναυτολόγησης</label>
+          <select id="new-zone-marine" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+            <option value="Όχι">Όχι</option>
+            <option value="Όλες τις ημέρες">Όλες τις ημέρες</option>
+            <option value="Μόνο Παρ - Κυρ">Μόνο Παρ - Κυρ</option>
+            <option value="Μόνο Δευτ - Πεμ">Μόνο Δευτ - Πεμ</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400">Προεπιλεγμένο πλήθος ατόμων (όλες τις μέρες)</label>
+          <input type="number" id="new-zone-count" min="0" max="10" value="1" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white text-center font-bold" />
+        </div>
+        <button onclick="addNewZone()" class="w-full bg-blue-600 active:bg-blue-700 py-3 rounded-xl text-xs font-bold text-white shadow-lg shadow-blue-600/30">
+          Αποθήκευση Νέας Ζώνης
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- APPLICATION LOGIC -->
+  <!-- ================= MODAL: ΡΥΘΜΙΣΕΙΣ API ================= -->
+  <div id="modal-settings" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-darkCard border border-darkBorder rounded-2xl w-full max-w-sm p-4 space-y-3.5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 class="text-sm font-bold flex items-center gap-1.5">
+          <i data-lucide="server" class="w-4 h-4 text-blue-400"></i> Ρυθμίσεις Solver API
+        </h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400">Python API URL (Render):</label>
+        <input type="text" id="api-url-input" placeholder="https://shift-api-xxxx.onrender.com" class="mt-1.5 w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 font-mono" />
+        <p class="text-[10px] text-slate-400 mt-1">Επικολλήστε το Web Service URL που σας έδωσε το Render.</p>
+      </div>
+      <div class="pt-2 flex gap-2">
+        <button onclick="saveApiUrl()" class="flex-1 bg-blue-600 py-2.5 rounded-xl font-bold text-xs text-white">Αποθήκευση</button>
+        <button onclick="closeSettingsModal()" class="px-3 bg-slate-800 rounded-xl text-xs font-semibold text-slate-300">Άκυρο</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= APPLICATION CODE ================= -->
   <script>
     const DAYS = ["Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή"];
     const ROLES = ["Bar", "Service", "Υποδοχή"];
 
-    const DEFAULT_STAFF = [
+    const DEFAULT_STAFF_CONFIG = [
       { id: 1, name: "Άρης", role: "Bar", is_marine: false, target_shifts: 5 },
       { id: 2, name: "Βαγγέλης", role: "Bar", is_marine: false, target_shifts: 5 },
       { id: 3, name: "Γιάννης", role: "Bar", is_marine: true, target_shifts: 5 },
@@ -231,7 +482,7 @@
       { id: 12, name: "Kaba", role: "Υποδοχή", is_marine: false, target_shifts: 5 }
     ];
 
-    const DEFAULT_ZONES = [
+    const DEFAULT_ZONES_CONFIG = [
       { "Πόστο": "Bar", "Ωράριο": "11:00 - 18:00", "⚓ Ναυτολόγηση": "Όχι", "Δευτέρα": 1, "Τρίτη": 1, "Τετάρτη": 1, "Πέμπτη": 1, "Παρασκευή": 1, "Σάββατο": 1, "Κυριακή": 1 },
       { "Πόστο": "Bar", "Ωράριο": "18:00 - 22:00", "⚓ Ναυτολόγηση": "Όλες τις ημέρες", "Δευτέρα": 2, "Τρίτη": 2, "Τετάρτη": 2, "Πέμπτη": 2, "Παρασκευή": 2, "Σάββατο": 2, "Κυριακή": 2 },
       { "Πόστο": "Bar", "Ωράριο": "22:00 - 01:00", "⚓ Ναυτολόγηση": "Όλες τις ημέρες", "Δευτέρα": 1, "Τρίτη": 1, "Τετάρτη": 1, "Πέμπτη": 1, "Παρασκευή": 1, "Σάββατο": 1, "Κυριακή": 1 },
@@ -243,39 +494,80 @@
       { "Πόστο": "Υποδοχή", "Ωράριο": "22:00 - 01:00", "⚓ Ναυτολόγηση": "Όχι", "Δευτέρα": 1, "Τρίτη": 1, "Τετάρτη": 1, "Πέμπτη": 1, "Παρασκευή": 1, "Σάββατο": 1, "Κυριακή": 1 }
     ];
 
-    // Local Storage State
-    let employees = JSON.parse(localStorage.getItem('shift_employees') || 'null');
-    if (!employees) {
-      employees = DEFAULT_STAFF.map(e => ({
+    function createDefaultEmployees() {
+      return DEFAULT_STAFF_CONFIG.map(e => ({
         ...e,
-        unavailability: DAYS.reduce((acc, d) => ({ ...acc, [d]: { status: 'available', start: 11, end: 17 } }), {})
+        unavailability: DAYS.reduce((acc, d) => {
+          acc[d] = { status: 'available', start: 11, end: 17 };
+          return acc;
+        }, {})
       }));
-      localStorage.setItem('shift_employees', JSON.stringify(employees));
     }
 
-    let zones = JSON.parse(localStorage.getItem('shift_zones') || 'null') || DEFAULT_ZONES;
+    // STATE
+    let employees = JSON.parse(localStorage.getItem('shift_employees') || 'null') || createDefaultEmployees();
+    let zones = JSON.parse(localStorage.getItem('shift_zones') || 'null') || DEFAULT_ZONES_CONFIG;
     let apiUrl = localStorage.getItem('shift_api_url') || 'http://localhost:8000';
     let lastSchedule = JSON.parse(localStorage.getItem('shift_last_schedule') || 'null');
     let lastRawShifts = JSON.parse(localStorage.getItem('shift_last_raw') || 'null');
     let currentSelectedDay = "Δευτέρα";
+    let currentDashRole = "Bar";
+    let scheduleViewMode = "cards";
 
-    // TAB SWITCHER
+    function formatHour(h) {
+      if (h < 24) return `${String(h).padStart(2, '0')}:00`;
+      if (h === 24) return "00:00";
+      return "01:00";
+    }
+
+    function getSlotBounds(slotStr) {
+      const clean = String(slotStr).trim();
+      const standard = {
+        "11:00 - 18:00": { start: 11, end: 18, duration: 7 },
+        "18:00 - 22:00": { start: 18, end: 22, duration: 4 },
+        "22:00 - 01:00": { start: 22, end: 25, duration: 3 }
+      };
+      if (standard[clean]) return standard[clean];
+      try {
+        const parts = clean.includes(" - ") ? clean.split(" - ") : clean.split("-");
+        const sVal = parseInt(parts[0].trim().split(":")[0]);
+        const eRaw = parts[1].trim().split(":")[0];
+        let eVal = (eRaw === "01" || eRaw === "1") ? 25 : ((eRaw === "00" || eRaw === "0") ? 24 : parseInt(eRaw));
+        if (eVal < sVal && eVal <= 3) eVal += 24;
+        return { start: sVal, end: eVal, duration: Math.max(0, eVal - sVal) };
+      } catch (e) {
+        return { start: 11, end: 18, duration: 7 };
+      }
+    }
+
+    // PERSISTENCE
+    function persistData() {
+      localStorage.setItem('shift_employees', JSON.stringify(employees));
+      localStorage.setItem('shift_zones', JSON.stringify(zones));
+      localStorage.setItem('shift_last_schedule', JSON.stringify(lastSchedule));
+      localStorage.setItem('shift_last_raw', JSON.stringify(lastRawShifts));
+    }
+
+    // NAVIGATION
     function switchTab(tab) {
       ['staff', 'zones', 'schedule'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
-        document.getElementById(`nav-${t}`).className = 'flex flex-col items-center justify-center w-20 text-slate-400';
+        document.getElementById(`nav-${t}`).className = 'flex flex-col items-center justify-center w-20 text-slate-400 transition';
       });
       document.getElementById(`tab-${tab}`).classList.remove('hidden');
-      document.getElementById(`nav-${tab}`).className = 'flex flex-col items-center justify-center w-20 text-blue-500';
+      document.getElementById(`nav-${tab}`).className = 'flex flex-col items-center justify-center w-20 text-blue-500 font-bold transition';
+
       if (tab === 'zones') renderZonesTab();
-      if (tab === 'schedule' && lastSchedule) renderScheduleResults(lastSchedule, lastRawShifts);
+      if (tab === 'schedule') {
+        if (lastSchedule) renderScheduleResults(lastSchedule, lastRawShifts);
+      }
       lucide.createIcons();
     }
 
-    // ================= STAFF TAB =================
+    // ================= TAB 1: ΚΑΡΤΕΛΑ ΥΠΑΛΛΗΛΟΥ =================
     function initStaffTab() {
       const select = document.getElementById('emp-select');
-      select.innerHTML = employees.map(e => `<option value="${e.id}">${e.name} (${e.role})</option>`).join('');
+      select.innerHTML = employees.map(e => `<option value="${e.id}">${e.name} (${e.role}${e.is_marine ? ' ⚓' : ''})</option>`).join('');
       loadSelectedEmployeeUI();
     }
 
@@ -293,40 +585,84 @@
       marCheck.checked = emp.is_marine || false;
       marCheck.disabled = (emp.role === "Υποδοχή");
 
-      const shiftsSlider = document.getElementById('emp-shifts');
-      shiftsSlider.value = emp.target_shifts || 5;
-      document.getElementById('target-shifts-val').innerText = emp.target_shifts || 5;
+      const marineBadge = document.getElementById('quick-marine-badge');
+      if (emp.is_marine) {
+        marineBadge.innerText = "⚓ Ναυτολογημένος";
+        marineBadge.classList.remove('hidden');
+      } else {
+        marineBadge.classList.add('hidden');
+      }
 
-      // Render daily availability
+      const shiftsSlider = document.getElementById('emp-shifts');
+      shiftsSlider.min = (emp.is_marine && emp.role !== "Υποδοχή") ? "5" : "1";
+      shiftsSlider.value = emp.target_shifts || 5;
+      updateShiftsDisplay(shiftsSlider.value);
+
+      // Render Quick Week Badges
+      const badgesContainer = document.getElementById('quick-week-badges');
+      badgesContainer.innerHTML = DAYS.map(d => {
+        const u = emp.unavailability?.[d] || { status: 'available' };
+        let bg = "bg-emerald-950/60 text-emerald-400 border-emerald-800/60";
+        let label = "ΟΚ";
+        if (u.status === 'all_day') {
+          bg = "bg-rose-950/60 text-rose-400 border-rose-800/60";
+          label = "ΡΕΠΟ";
+        } else if (u.status === 'custom') {
+          bg = "bg-amber-950/60 text-amber-400 border-amber-800/60";
+          label = `${formatHour(u.start).slice(0,2)}`;
+        }
+        return `
+          <div class="border ${bg} rounded-lg py-1 px-0.5 text-center flex flex-col items-center">
+            <span class="text-[9px] text-slate-400 uppercase font-semibold">${d.slice(0, 2)}</span>
+            <span class="text-[10px] font-extrabold mt-0.5">${label}</span>
+          </div>
+        `;
+      }).join('');
+
+      // Render Day-by-Day Controls
       const container = document.getElementById('daily-availability-container');
       container.innerHTML = DAYS.map(d => {
-        const u = (emp.unavailability && emp.unavailability[d]) ? emp.unavailability[d] : { status: 'available', start: 11, end: 17 };
+        const u = emp.unavailability?.[d] || { status: 'available', start: 11, end: 17 };
         const isAvail = u.status === 'available';
         const isRepo = u.status === 'all_day';
         const isCustom = u.status === 'custom';
 
         return `
-          <div class="bg-darkCard border border-darkBorder rounded-xl p-3 flex flex-col gap-2">
+          <div class="bg-darkCard border border-darkBorder rounded-2xl p-3 flex flex-col gap-2.5 shadow-sm">
             <div class="flex items-center justify-between">
-              <span class="font-bold text-sm">${d}</span>
-              <div class="flex gap-1 text-xs">
-                <button type="button" onclick="setDayStatus(${emp.id}, '${d}', 'available')" class="px-2 py-1 rounded-lg ${isAvail ? 'bg-emerald-600 text-white font-bold' : 'bg-slate-800 text-slate-400'}">🟢 ΟΚ</button>
-                <button type="button" onclick="setDayStatus(${emp.id}, '${d}', 'all_day')" class="px-2 py-1 rounded-lg ${isRepo ? 'bg-rose-600 text-white font-bold' : 'bg-slate-800 text-slate-400'}">🔴 Ρεπό</button>
-                <button type="button" onclick="setDayStatus(${emp.id}, '${d}', 'custom')" class="px-2 py-1 rounded-lg ${isCustom ? 'bg-amber-600 text-white font-bold' : 'bg-slate-800 text-slate-400'}">🟡 Ώρες</button>
+              <span class="font-bold text-xs text-white">${d}</span>
+              <div class="flex gap-1">
+                <button type="button" onclick="setDayStatus(${emp.id}, '${d}', 'available')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition ${isAvail ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-900 border border-slate-700 text-slate-400'}">🟢 ΟΚ</button>
+                <button type="button" onclick="setDayStatus(${emp.id}, '${d}', 'all_day')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition ${isRepo ? 'bg-rose-600 text-white shadow-sm' : 'bg-slate-900 border border-slate-700 text-slate-400'}">🔴 Ρεπό</button>
+                <button type="button" onclick="setDayStatus(${emp.id}, '${d}', 'custom')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition ${isCustom ? 'bg-amber-600 text-white shadow-sm' : 'bg-slate-900 border border-slate-700 text-slate-400'}">🟡 Ώρες</button>
               </div>
             </div>
+
             ${isCustom ? `
-              <div class="flex items-center gap-2 pt-1 border-t border-slate-800 text-xs text-amber-300">
-                <span>Κώλυμα:</span>
-                <input type="number" min="11" max="24" value="${u.start}" onchange="setCustomHours(${emp.id}, '${d}', 'start', this.value)" class="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white" />
-                <span>έως</span>
-                <input type="number" min="12" max="25" value="${u.end}" onchange="setCustomHours(${emp.id}, '${d}', 'end', this.value)" class="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white" />
+              <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs bg-slate-900/60 p-2 rounded-xl">
+                <span class="text-amber-300 font-semibold flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3.5 h-3.5"></i> Κώλυμα:
+                </span>
+                <div class="flex items-center gap-1.5 font-bold">
+                  <select onchange="setCustomHours(${emp.id}, '${d}', 'start', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+                    ${Array.from({length: 14}, (_, i) => 11 + i).map(h => `<option value="${h}" ${u.start === h ? 'selected' : ''}>${formatHour(h)}</option>`).join('')}
+                  </select>
+                  <span class="text-slate-400">έως</span>
+                  <select onchange="setCustomHours(${emp.id}, '${d}', 'end', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+                    ${Array.from({length: 14}, (_, i) => 12 + i).map(h => `<option value="${h}" ${u.end === h ? 'selected' : ''}>${formatHour(h)}</option>`).join('')}
+                  </select>
+                </div>
               </div>
             ` : ''}
           </div>
         `;
       }).join('');
       lucide.createIcons();
+    }
+
+    function updateShiftsDisplay(val) {
+      document.getElementById('target-shifts-val').innerText = `${val} / 7`;
+      document.getElementById('shifts-slider-hint').innerText = val;
     }
 
     function onRoleChange() {
@@ -340,25 +676,44 @@
       }
     }
 
+    function onMarineChange() {
+      const isMar = document.getElementById('emp-marine').checked;
+      const slider = document.getElementById('emp-shifts');
+      if (isMar) {
+        slider.min = "5";
+        if (parseInt(slider.value) < 5) {
+          slider.value = 5;
+          updateShiftsDisplay(5);
+        }
+      } else {
+        slider.min = "1";
+      }
+    }
+
     function setDayStatus(empId, day, status) {
       const emp = employees.find(e => e.id === empId);
+      if (!emp) return;
       if (!emp.unavailability) emp.unavailability = {};
       if (!emp.unavailability[day]) emp.unavailability[day] = { start: 11, end: 17 };
       emp.unavailability[day].status = status;
+      persistData();
       loadSelectedEmployeeUI();
     }
 
-    function setCustomHours(empId, day, key, val) {
+    function setCustomHours(empId, day, field, val) {
       const emp = employees.find(e => e.id === empId);
-      emp.unavailability[day][key] = parseInt(val);
+      if (!emp) return;
+      emp.unavailability[day][field] = parseInt(val);
+      persistData();
+      loadSelectedEmployeeUI();
     }
 
     function saveCurrentEmployee() {
       const emp = getSelectedEmp();
       emp.role = document.getElementById('emp-role').value;
-      emp.is_marine = document.getElementById('emp-marine').checked;
+      emp.is_marine = document.getElementById('emp-marine').checked && emp.role !== "Υποδοχή";
       emp.target_shifts = parseInt(document.getElementById('emp-shifts').value);
-      localStorage.setItem('shift_employees', JSON.stringify(employees));
+      persistData();
       initStaffTab();
       alert(`Οι αλλαγές για τον/την ${emp.name} αποθηκεύτηκαν!`);
     }
@@ -366,77 +721,311 @@
     function resetCurrentEmpAvail() {
       const emp = getSelectedEmp();
       DAYS.forEach(d => emp.unavailability[d] = { status: 'available', start: 11, end: 17 });
-      localStorage.setItem('shift_employees', JSON.stringify(employees));
+      persistData();
       loadSelectedEmployeeUI();
     }
 
-    // ================= ZONES TAB =================
+    // ================= MODAL ΠΡΟΣΩΠΙΚΟΥ =================
+    function openStaffManageModal() {
+      const delSelect = document.getElementById('del-emp-select');
+      delSelect.innerHTML = employees.map(e => `<option value="${e.id}">${e.name} (${e.role})</option>`).join('');
+      document.getElementById('modal-staff').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeStaffManageModal() {
+      document.getElementById('modal-staff').classList.add('hidden');
+    }
+
+    function onNewEmpRoleChange() {
+      const r = document.getElementById('new-emp-role').value;
+      const check = document.getElementById('new-emp-marine');
+      if (r === "Υποδοχή") {
+        check.checked = false;
+        check.disabled = true;
+      } else {
+        check.disabled = false;
+      }
+    }
+
+    function addNewEmployee() {
+      const name = document.getElementById('new-emp-name').value.trim();
+      if (!name) return alert("Εισάγετε όνομα.");
+      if (employees.some(e => e.name.toLowerCase() === name.toLowerCase())) {
+        return alert("Υπάρχει ήδη υπάλληλος με αυτό το όνομα.");
+      }
+
+      const role = document.getElementById('new-emp-role').value;
+      const isMarine = document.getElementById('new-emp-marine').checked && role !== "Υποδοχή";
+      let shifts = parseInt(document.getElementById('new-emp-shifts').value);
+      if (isMarine && shifts < 5) shifts = 5;
+
+      const newId = employees.length ? Math.max(...employees.map(e => e.id)) + 1 : 1;
+      const newEmp = {
+        id: newId,
+        name: name,
+        role: role,
+        is_marine: isMarine,
+        target_shifts: shifts,
+        unavailability: DAYS.reduce((acc, d) => {
+          acc[d] = { status: 'available', start: 11, end: 17 };
+          return acc;
+        }, {})
+      };
+
+      employees.push(newEmp);
+      persistData();
+      initStaffTab();
+      document.getElementById('new-emp-name').value = '';
+      closeStaffManageModal();
+      alert(`Ο/Η ${name} προστέθηκε!`);
+    }
+
+    function deleteSelectedEmployee() {
+      const delId = parseInt(document.getElementById('del-emp-select').value);
+      const emp = employees.find(e => e.id === delId);
+      if (!emp) return;
+      if (!confirm(`Οριστική διαγραφή του/της ${emp.name};`)) return;
+
+      employees = employees.filter(e => e.id !== delId);
+      persistData();
+      initStaffTab();
+      closeStaffManageModal();
+    }
+
+    function resetAllEmployeesToDefault() {
+      if (!confirm("Επαναφορά όλων των προεπιλεγμένων υπαλλήλων; Όλες οι τρέχουσες αλλαγές θα χαθούν.")) return;
+      employees = createDefaultEmployees();
+      persistData();
+      initStaffTab();
+      closeStaffManageModal();
+    }
+
+    // ================= TAB 2: ZONES & KPIS & DASHBOARD =================
     function renderZonesTab() {
-      // Render KPI cards
+      renderKPICards();
+      renderDashboardMatrix();
+      renderZonesList();
+    }
+
+    function calculateRoleKPIs() {
+      const kpis = {};
+      ROLES.forEach(r => {
+        const staff = employees.filter(e => e.role === r);
+        const marines = staff.filter(e => e.is_marine);
+        const availShifts = staff.reduce((acc, e) => acc + (e.target_shifts || 5), 0);
+        const availHours = availShifts * 8;
+
+        let totalNeededHours = 0;
+        const roleZones = zones.filter(z => z["Πόστο"] === r);
+        DAYS.forEach(d => {
+          roleZones.forEach(z => {
+            const bounds = getSlotBounds(z["Ωράριο"]);
+            const count = parseInt(z[d] || 0);
+            totalNeededHours += (count * bounds.duration);
+          });
+        });
+
+        let status = "🟢 Πλήρης";
+        if (availHours < totalNeededHours) status = "🔴 Έλλειψη";
+        else if (availHours === totalNeededHours) status = "⚠️ Οριακό";
+
+        kpis[r] = {
+          count: staff.length,
+          marines: marines.length,
+          availHours,
+          totalNeededHours,
+          status
+        };
+      });
+      return kpis;
+    }
+
+    function renderKPICards() {
       const kpis = calculateRoleKPIs();
-      const kpiContainer = document.getElementById('kpi-cards');
-      kpiContainer.innerHTML = ROLES.map(r => {
+      const container = document.getElementById('kpi-cards');
+      container.innerHTML = ROLES.map(r => {
         const k = kpis[r];
-        const isOk = k.avail >= k.needed;
+        const isOk = k.availHours >= k.totalNeededHours;
         return `
-          <div class="bg-darkCard border border-darkBorder rounded-xl p-2.5 text-center">
-            <span class="text-[11px] font-bold text-slate-400">${r}</span>
-            <div class="text-xs font-extrabold ${isOk ? 'text-emerald-400' : 'text-rose-400'} mt-0.5">${k.avail}h / ${k.needed}h</div>
-            <div class="text-[9px] text-slate-500">${k.count} άτομα (${k.marines} ⚓)</div>
+          <div class="bg-darkCard border border-darkBorder rounded-2xl p-3 text-center space-y-1 shadow-sm">
+            <span class="text-xs font-bold text-slate-300">${r}</span>
+            <div class="text-sm font-extrabold ${isOk ? 'text-emerald-400' : 'text-rose-400'}">${k.availHours}/${k.totalNeededHours}h</div>
+            <div class="text-[10px] text-slate-400">${k.count} άτομα (${k.marines} ⚓)</div>
+            <div class="text-[9px] font-bold ${isOk ? 'text-emerald-500' : 'text-rose-500'}">${k.status}</div>
           </div>
         `;
       }).join('');
+    }
 
-      // Render Zones list
-      const zContainer = document.getElementById('zones-list-container');
-      zContainer.innerHTML = zones.map((z, idx) => `
-        <div class="bg-darkCard border border-darkBorder rounded-xl p-3 space-y-2">
+    function setDashRole(role) {
+      currentDashRole = role;
+      ROLES.forEach(r => {
+        const btn = document.getElementById(`dash-btn-${r}`);
+        if (r === role) {
+          btn.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white";
+        } else {
+          btn.className = "px-2 py-0.5 rounded text-[10px] font-bold text-slate-400";
+        }
+      });
+      renderDashboardMatrix();
+    }
+
+    function renderDashboardMatrix() {
+      const tbody = document.getElementById('dash-matrix-tbody');
+      const staffR = employees.filter(e => e.role === currentDashRole);
+      const roleZones = zones.filter(z => z["Πόστο"] === currentDashRole);
+
+      // Daily Peak Requirements
+      const dailyPeak = {};
+      DAYS.forEach(d => {
+        const hDem = new Array(26).fill(0);
+        roleZones.forEach(z => {
+          const bounds = getSlotBounds(z["Ωράριο"]);
+          const count = parseInt(z[d] || 0);
+          if (count > 0) {
+            for (let h = bounds.start; h < bounds.end; h++) {
+              hDem[h] += count;
+            }
+          }
+        });
+        dailyPeak[d] = Math.max(...hDem.slice(11, 25), 0);
+      });
+
+      let html = '';
+      // Staff rows
+      staffR.forEach(e => {
+        html += `
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-1.5 px-1.5 font-bold text-white whitespace-nowrap">${e.name} ${e.is_marine ? '⚓' : ''}</td>
+            <td class="py-1.5 px-1 text-center font-mono text-slate-400">${e.target_shifts}/7</td>
+            ${DAYS.map(d => {
+              const u = e.unavailability?.[d] || { status: 'available' };
+              if (u.status === 'all_day') return '<td class="py-1 px-1 text-center font-bold text-rose-400">🔴</td>';
+              if (u.status === 'custom') return `<td class="py-1 px-1 text-center font-bold text-amber-400 text-[9px]">${u.start}</td>`;
+              return '<td class="py-1 px-1 text-center text-emerald-400 font-bold">🟢</td>';
+            }).join('')}
+          </tr>
+        `;
+      });
+
+      // Total Available Row
+      html += `
+        <tr class="bg-slate-900/80 font-bold border-t border-slate-700">
+          <td class="py-1.5 px-1.5 text-blue-300">👥 Διαθέσιμοι</td>
+          <td class="py-1.5 px-1 text-center text-blue-400 font-mono">${staffR.reduce((a,b)=>a+b.target_shifts, 0)}</td>
+          ${DAYS.map(d => {
+            const cnt = staffR.filter(e => e.unavailability?.[d]?.status !== 'all_day').length;
+            return `<td class="py-1 px-1 text-center font-bold text-blue-300">${cnt}</td>`;
+          }).join('')}
+        </tr>
+      `;
+
+      // Peak Needed Row
+      html += `
+        <tr class="bg-slate-900/80 font-bold">
+          <td class="py-1.5 px-1.5 text-slate-400">📌 Αιχμή</td>
+          <td class="py-1.5 px-1 text-center text-slate-500">-</td>
+          ${DAYS.map(d => `<td class="py-1 px-1 text-center font-mono text-slate-300">${dailyPeak[d]}</td>`).join('')}
+        </tr>
+      `;
+
+      // Balance Row
+      html += `
+        <tr class="bg-slate-900/80 font-extrabold border-b border-slate-700">
+          <td class="py-1.5 px-1.5 text-amber-300">⚖️ Ισοζύγιο</td>
+          <td class="py-1.5 px-1 text-center text-slate-500">-</td>
+          ${DAYS.map(d => {
+            const cnt = staffR.filter(e => e.unavailability?.[d]?.status !== 'all_day').length;
+            const diff = cnt - dailyPeak[d];
+            const color = diff < 0 ? 'text-rose-400' : (diff === 0 ? 'text-amber-400' : 'text-emerald-400');
+            return `<td class="py-1 px-1 text-center font-mono ${color}">${diff > 0 ? '+' : ''}${diff}</td>`;
+          }).join('')}
+        </tr>
+      `;
+
+      tbody.innerHTML = html;
+    }
+
+    function renderZonesList() {
+      const container = document.getElementById('zones-list-container');
+      container.innerHTML = zones.map((z, idx) => `
+        <div class="bg-darkCard border border-darkBorder rounded-2xl p-3.5 space-y-2.5 shadow-sm">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-blue-400">[${z["Πόστο"]}] ${z["Ωράριο"]}</span>
-            <span class="text-[10px] px-2 py-0.5 rounded-full ${z["⚓ Ναυτολόγηση"] !== 'Όχι' ? 'bg-amber-950 text-amber-300 border border-amber-800' : 'bg-slate-800 text-slate-400'}">⚓ ${z["⚓ Ναυτολόγηση"]}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-blue-600/20 text-blue-400 border border-blue-500/30">${z["Πόστο"]}</span>
+              <span class="text-xs font-bold text-white">${z["Ωράριο"]}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] px-2 py-0.5 rounded-full ${z["⚓ Ναυτολόγηση"] !== 'Όχι' ? 'bg-amber-950 text-amber-300 border border-amber-800' : 'bg-slate-800 text-slate-400'}">⚓ ${z["⚓ Ναυτολόγηση"]}</span>
+              <button onclick="deleteZone(${idx})" class="p-1 rounded text-slate-500 hover:text-rose-400 active:scale-95"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </div>
           </div>
-          <div class="grid grid-cols-7 gap-1 text-center">
+          <div class="grid grid-cols-7 gap-1">
             ${DAYS.map(d => `
-              <div class="bg-slate-900 border border-slate-800 rounded p-1">
-                <div class="text-[9px] text-slate-500">${d.slice(0, 3)}</div>
-                <input type="number" min="0" max="9" value="${z[d] || 0}" onchange="updateZoneDay(${idx}, '${d}', this.value)" class="w-full bg-transparent text-center font-bold text-xs text-slate-200 outline-none" />
+              <div class="bg-slate-900 border border-slate-800 rounded-xl p-1 text-center">
+                <span class="text-[9px] text-slate-500 font-bold block">${d.slice(0, 2)}</span>
+                <input type="number" min="0" max="10" value="${z[d] || 0}" onchange="updateZoneDayVal(${idx}, '${d}', this.value)" class="w-full bg-transparent text-center font-extrabold text-xs text-white outline-none focus:text-blue-400" />
               </div>
             `).join('')}
           </div>
         </div>
       `).join('');
+      lucide.createIcons();
     }
 
-    function calculateRoleKPIs() {
-      const res = {};
-      ROLES.forEach(r => {
-        const staff = employees.filter(e => e.role === r);
-        const availH = staff.reduce((acc, e) => acc + (e.target_shifts * 8), 0);
-        let neededH = 0;
-        zones.filter(z => z["Πόστο"] === r).forEach(z => {
-          const dur = 7; // Approx slot duration
-          DAYS.forEach(d => neededH += ((z[d] || 0) * dur));
-        });
-        res[r] = { count: staff.length, marines: staff.filter(e => e.is_marine).length, avail: availH, needed: neededH };
-      });
-      return res;
-    }
-
-    function updateZoneDay(idx, day, val) {
+    function updateZoneDayVal(idx, day, val) {
       zones[idx][day] = parseInt(val) || 0;
-      localStorage.setItem('shift_zones', JSON.stringify(zones));
+      persistData();
+      renderKPICards();
     }
 
-    // ================= SOLVER & SCHEDULE TAB =================
+    function saveAllZones() {
+      persistData();
+      renderZonesTab();
+      alert("Οι αλλαγές των ζωνών αποθηκεύτηκαν!");
+    }
+
+    function openAddZoneModal() {
+      document.getElementById('modal-zone').classList.remove('hidden');
+    }
+    function closeAddZoneModal() {
+      document.getElementById('modal-zone').classList.add('hidden');
+    }
+
+    function addNewZone() {
+      const role = document.getElementById('new-zone-role').value;
+      const slot = document.getElementById('new-zone-slot').value.trim();
+      const marine = document.getElementById('new-zone-marine').value;
+      const defCount = parseInt(document.getElementById('new-zone-count').value) || 1;
+
+      if (!slot) return alert("Συμπληρώστε το ωράριο.");
+
+      const newZ = { "Πόστο": role, "Ωράριο": slot, "⚓ Ναυτολόγηση": marine };
+      DAYS.forEach(d => newZ[d] = defCount);
+      zones.push(newZ);
+      persistData();
+      closeAddZoneModal();
+      renderZonesTab();
+    }
+
+    function deleteZone(idx) {
+      if (!confirm("Διαγραφή αυτής της ζώνης;")) return;
+      zones.splice(idx, 1);
+      persistData();
+      renderZonesTab();
+    }
+
+    // ================= TAB 3: SOLVER & SCHEDULE =================
     async function runSolver() {
       const btn = document.getElementById('btn-solve');
       const loader = document.getElementById('solve-loader');
-      const errorBox = document.getElementById('schedule-errors');
-      const resultsBox = document.getElementById('schedule-results');
+      const errBox = document.getElementById('schedule-errors');
+      const resBox = document.getElementById('schedule-results');
 
       btn.classList.add('hidden');
       loader.classList.remove('hidden');
-      errorBox.classList.add('hidden');
+      errBox.classList.add('hidden');
 
       try {
         const response = await fetch(`${apiUrl}/api/solve`, {
@@ -445,22 +1034,29 @@
           body: JSON.stringify({ employees, zones_matrix: zones })
         });
 
-        if (!response.ok) throw new Error("HTTP Error " + response.status);
+        if (!response.ok) throw new Error("HTTP Status " + response.status);
         const data = await response.json();
 
         if (data.success) {
           lastSchedule = data.schedule_matrix;
           lastRawShifts = data.raw_shifts;
-          localStorage.setItem('shift_last_schedule', JSON.stringify(lastSchedule));
-          localStorage.setItem('shift_last_raw', JSON.stringify(lastRawShifts));
+          persistData();
           renderScheduleResults(lastSchedule, lastRawShifts);
-          resultsBox.classList.remove('hidden');
+          resBox.classList.remove('hidden');
         } else {
-          document.getElementById('error-list').innerHTML = data.issues.map(i => `<div>• <b>${i["Πόστο"]} (${i["Ημέρα"]}):</b> ${i["Πρόβλημα"]} [${i["Ώρες"]}]</div>`).join('');
-          errorBox.classList.remove('hidden');
+          resBox.classList.add('hidden');
+          const errList = document.getElementById('error-list');
+          errList.innerHTML = data.issues.map(i => `
+            <div class="py-1">
+              <span class="font-bold text-rose-300">• [${i["Πόστο"]}]</span>
+              <span class="font-semibold text-rose-200"> ${i["Ημέρα"]}:</span>
+              <span class="text-rose-100">${i["Πρόβλημα"] || i["Τύπος Προβλήματος"]} (${i["Ώρες"] || i["Βάρδια / Ώρες"]})</span>
+            </div>
+          `).join('');
+          errBox.classList.remove('hidden');
         }
       } catch (err) {
-        alert("Αδυναμία σύνδεσης με το API. Ελέγξτε το URL στις Ρυθμίσεις (⚙️).");
+        alert("Αδυναμία σύνδεσης με το Python Solver API. Βεβαιωθείτε ότι έχετε ρυθμίσει το σωστό URL στις Ρυθμίσεις (⚙️).");
         console.error(err);
       } finally {
         btn.classList.remove('hidden');
@@ -469,16 +1065,125 @@
       }
     }
 
+    function setScheduleViewMode(mode) {
+      scheduleViewMode = mode;
+      const btnCards = document.getElementById('btn-view-cards');
+      const btnTable = document.getElementById('btn-view-table');
+      const viewCards = document.getElementById('view-mode-cards');
+      const viewTable = document.getElementById('view-mode-table');
+
+      if (mode === 'cards') {
+        btnCards.className = "flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white flex items-center justify-center gap-1.5 shadow";
+        btnTable.className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 flex items-center justify-center gap-1.5";
+        viewCards.classList.remove('hidden');
+        viewTable.classList.add('hidden');
+      } else {
+        btnTable.className = "flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white flex items-center justify-center gap-1.5 shadow";
+        btnCards.className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 flex items-center justify-center gap-1.5";
+        viewTable.classList.remove('hidden');
+        viewCards.classList.add('hidden');
+      }
+      lucide.createIcons();
+    }
+
     function renderScheduleResults(matrix, rawShifts) {
       document.getElementById('schedule-results').classList.remove('hidden');
 
-      // Day pills
+      // 1. Day Pills
       const pillsContainer = document.getElementById('day-selector-pills');
       pillsContainer.innerHTML = DAYS.map(d => `
-        <button onclick="selectDayView('${d}')" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${d === currentSelectedDay ? 'bg-blue-600 text-white shadow-md shadow-blue-600/40' : 'bg-slate-800 text-slate-400'}">${d}</button>
+        <button onclick="selectDayView('${d}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition active:scale-95 ${d === currentSelectedDay ? 'bg-blue-600 text-white shadow-md shadow-blue-600/40' : 'bg-darkCard border border-darkBorder text-slate-400'}">${d}</button>
       `).join('');
 
-      renderDayShifts(currentSelectedDay, rawShifts);
+      // 2. Day Cards Content
+      const shiftsContainer = document.getElementById('day-shifts-content');
+      const currentDayShifts = (rawShifts || []).filter(s => s.day === currentSelectedDay);
+
+      shiftsContainer.innerHTML = ROLES.map(role => {
+        const shifts = currentDayShifts.filter(s => s.role === role).sort((a,b) => a.start_h - b.start_h);
+        const roleBadgeColors = {
+          "Bar": "bg-blue-600/20 text-blue-400 border-blue-500/30",
+          "Service": "bg-amber-600/20 text-amber-400 border-amber-500/30",
+          "Υποδοχή": "bg-emerald-600/20 text-emerald-400 border-emerald-500/30"
+        };
+
+        return `
+          <div class="bg-darkCard border border-darkBorder rounded-2xl p-3.5 space-y-2.5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg border ${roleBadgeColors[role]} uppercase tracking-wider">${role}</span>
+              <span class="text-[11px] text-slate-400 font-semibold">${shifts.length} εργαζόμενοι</span>
+            </div>
+            <div class="space-y-1.5">
+              ${shifts.length > 0 ? shifts.map(s => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+                  <div class="flex items-center gap-1.5 font-bold text-white">
+                    ${s.is_marine ? '<span class="text-blue-400">⚓</span>' : ''}
+                    <span>${s.name}</span>
+                    <span class="text-[10px] text-slate-500 font-normal">(${s.hours}h${s.is_overtime ? ' <b class="text-amber-400 font-bold">🔥 &gt;10h</b>' : ''})</span>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-lg bg-blue-950/80 text-blue-300 border border-blue-800/60 font-mono font-bold">${s.shift}</span>
+                </div>
+              `).join('') : '<p class="text-xs text-slate-500 italic py-1">Κανένας προγραμματισμένος εργαζόμενος.</p>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 3. Day Off
+      const workingNames = new Set(currentDayShifts.map(s => s.name));
+      const offStaff = employees.filter(e => !workingNames.has(e.name)).map(e => e.name);
+      document.getElementById('day-off-staff').innerText = offStaff.length ? offStaff.join(', ') : "Κανένας (όλοι εργάζονται)";
+
+      // 4. Full Table
+      const fullTbody = document.getElementById('full-schedule-tbody');
+      fullTbody.innerHTML = matrix.map(row => {
+        return `
+          <tr class="hover:bg-slate-850">
+            <td class="py-2 px-2 font-bold text-white whitespace-nowrap sticky left-0 bg-slate-900 z-10 border-r border-slate-800">${row["Εργαζόμενος"]}</td>
+            <td class="py-2 px-2 text-slate-400 font-semibold whitespace-nowrap">${row["Πόστο"]}</td>
+            ${DAYS.map(d => {
+              const val = row[d] || "ΡΕΠΟ";
+              const isRepo = val === "ΡΕΠΟ";
+              return `
+                <td class="py-2 px-1.5 text-center whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${isRepo ? 'bg-rose-950/60 text-rose-400 border border-rose-800/40' : 'bg-slate-900 text-slate-200 border border-slate-700/60 font-mono'}">${val}</span>
+                </td>
+              `;
+            }).join('')}
+          </tr>
+        `;
+      }).join('');
+
+      // 5. Marine Audit
+      const auditContainer = document.getElementById('marine-audit-container');
+      const marines = employees.filter(e => e.is_marine && (e.role === "Bar" || e.role === "Service"));
+
+      auditContainer.innerHTML = marines.map(m => {
+        const mShifts = (rawShifts || []).filter(s => s.name === m.name);
+        const shiftCount = mShifts.length;
+        const totHours = mShifts.reduce((acc, s) => acc + (s.hours || 0), 0);
+        const overtimes = mShifts.filter(s => s.hours > 10);
+
+        const ok40h = totHours >= 40;
+        const ok5Shifts = shiftCount >= 5;
+        const okOt = overtimes.length <= 1;
+
+        return `
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs space-y-1.5">
+            <div class="flex items-center justify-between font-bold text-white">
+              <span>⚓ ${m.name} (${m.role})</span>
+              <span class="font-mono text-blue-400">${totHours} ώρες | ${shiftCount}/7 βάρδιες</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1 text-[10px] pt-1 border-t border-slate-800/60 text-center font-semibold">
+              <span class="${ok40h ? 'text-emerald-400' : 'text-amber-400'}">${ok40h ? '✅' : '⚠️'} 40+ Ώρες</span>
+              <span class="${ok5Shifts ? 'text-emerald-400' : 'text-rose-400'}">${ok5Shifts ? '✅' : '❌'} 5+ Βάρδιες</span>
+              <span class="${okOt ? 'text-emerald-400' : 'text-rose-400'}">${okOt ? '✅' : '❌'} &le;1 &gt;10ωρο</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
     }
 
     function selectDayView(day) {
@@ -486,46 +1191,15 @@
       renderScheduleResults(lastSchedule, lastRawShifts);
     }
 
-    function renderDayShifts(day, rawShifts) {
-      const container = document.getElementById('day-shifts-content');
-      const dayShifts = (rawShifts || []).filter(s => s.day === day);
-
-      container.innerHTML = ROLES.map(role => {
-        const shifts = dayShifts.filter(s => s.role === role).sort((a,b) => a.start_h - b.start_h);
-        const roleColors = {
-          "Bar": "border-blue-500/30 bg-blue-950/20 text-blue-400",
-          "Service": "border-amber-500/30 bg-amber-950/20 text-amber-400",
-          "Υποδοχή": "border-emerald-500/30 bg-emerald-950/20 text-emerald-400"
-        };
-
-        return `
-          <div class="bg-darkCard border border-darkBorder rounded-xl p-3 space-y-2">
-            <h4 class="text-xs font-bold tracking-wide uppercase ${roleColors[role]} px-2.5 py-1 rounded-md inline-block">${role}</h4>
-            <div class="space-y-1.5">
-              ${shifts.length > 0 ? shifts.map(s => `
-                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800 text-xs">
-                  <div class="font-bold flex items-center gap-1.5">
-                    ${s.is_marine ? '<span class="text-blue-400">⚓</span>' : ''}
-                    <span>${s.name}</span>
-                    <span class="text-[10px] text-slate-500">(${s.hours}h)</span>
-                  </div>
-                  <span class="px-2 py-0.5 rounded bg-blue-600/20 text-blue-300 font-mono font-semibold">${s.shift}</span>
-                </div>
-              `).join('') : '<p class="text-[11px] text-slate-500 italic">Κανένας εργαζόμενος</p>'}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
     async function downloadExcel() {
-      if (!lastSchedule) return;
+      if (!lastSchedule) return alert("Υπολογίστε πρώτα το πρόγραμμα.");
       try {
         const res = await fetch(`${apiUrl}/api/export-excel`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ schedule_matrix: lastSchedule })
         });
+        if (!res.ok) throw new Error("Excel generation error");
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -534,12 +1208,12 @@
         document.body.appendChild(a);
         a.click();
         a.remove();
-      } catch (e) {
-        alert("Σφάλμα λήψης Excel.");
+      } catch (err) {
+        alert("Σφάλμα κατά τη λήψη του Excel αρχείου.");
       }
     }
 
-    // SETTINGS MODAL
+    // ================= MODAL ΡΥΘΜΙΣΕΩΝ API =================
     function openSettingsModal() {
       document.getElementById('api-url-input').value = apiUrl;
       document.getElementById('modal-settings').classList.remove('hidden');
@@ -551,14 +1225,16 @@
       apiUrl = document.getElementById('api-url-input').value.trim();
       localStorage.setItem('shift_api_url', apiUrl);
       closeSettingsModal();
-      alert("Το API URL αποθηκεύτηκε!");
+      alert("Το API URL αποθηκεύτηκε επιτυχώς!");
     }
 
     // INIT
     window.addEventListener('DOMContentLoaded', () => {
       initStaffTab();
       lucide.createIcons();
-      if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      }
     });
   </script>
 </body>
